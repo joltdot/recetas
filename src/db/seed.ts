@@ -13,7 +13,7 @@ const CATEGORIES = [
 ]
 
 async function main() {
-  const pool = createPool({ connectionString: process.env.POSTGRES_URL_NON_POOLING })
+  const pool = createPool({ connectionString: process.env.POSTGRES_URL })
   const db = drizzle(pool, { schema })
 
   console.log("Seeding categories...")
