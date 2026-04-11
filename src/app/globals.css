@@ -2,26 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-900 font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+  /* iOS momentum scrolling */
+  html {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-amber-500 active:bg-amber-700 text-white font-medium px-4 py-3 rounded-xl min-h-[44px] transition-colors cursor-pointer select-none;
+  }
+  .btn-primary:hover:not(:active) {
+    @apply bg-amber-600;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-stone-200 active:bg-stone-300 text-stone-800 font-medium px-4 py-3 rounded-xl min-h-[44px] transition-colors cursor-pointer select-none;
+  }
+  .btn-secondary:hover:not(:active) {
+    @apply bg-stone-300;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-red-500 active:bg-red-700 text-white font-medium px-4 py-3 rounded-xl min-h-[44px] transition-colors cursor-pointer select-none;
+  }
+  .btn-danger:hover:not(:active) {
+    @apply bg-red-600;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 text-stone-600 active:bg-stone-100 font-medium px-3 py-2 rounded-xl min-h-[44px] transition-colors cursor-pointer select-none;
+  }
+  .btn-ghost:hover:not(:active) {
+    @apply bg-stone-100;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-stone-200 p-4;
+  }
+  .badge {
+    @apply inline-block text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full;
+  }
+  .input {
+    @apply border border-stone-300 rounded-xl px-4 py-3 w-full text-base focus:outline-none focus:ring-2 focus:ring-amber-400 min-h-[44px] bg-white;
+  }
+  .label {
+    @apply block text-sm font-medium text-stone-700 mb-1.5;
+  }
+  /* Safe area for iOS notch / home bar */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  }
+  /* Extra bottom margin so content doesn't hide behind mobile nav */
+  .mb-nav {
+    @apply mb-24 sm:mb-8;
+  }
+  /* Hide scrollbar but keep scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
