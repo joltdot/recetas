@@ -45,7 +45,7 @@ async function getCategories(): Promise<Category[]> {
   return db.select().from(schema.categories).orderBy(asc(schema.categories.name)) as Promise<Category[]>
 }
 
-export default async function HomePage({ searchParams }: HomeProps) {
+export default async function HomePage({ searchParams: _searchParams }: HomeProps) {
   const [recipes, categories] = await Promise.all([getRecipes(), getCategories()])
 
   return (
