@@ -7,10 +7,6 @@ import CategoryFilter from "@/components/CategoryFilter"
 import RecipeGrid from "@/components/RecipeGrid"
 import type { Recipe, Category } from "@/types"
 
-interface HomeProps {
-  searchParams: { categoria?: string }
-}
-
 async function getRecipes(): Promise<Recipe[]> {
   const rows = await db
     .select({
@@ -45,7 +41,7 @@ async function getCategories(): Promise<Category[]> {
   return db.select().from(schema.categories).orderBy(asc(schema.categories.name)) as Promise<Category[]>
 }
 
-export default async function HomePage({ searchParams: _searchParams }: HomeProps) {
+export default async function HomePage() {
   const [recipes, categories] = await Promise.all([getRecipes(), getCategories()])
 
   return (
