@@ -7,7 +7,7 @@ import IngredientEditor from "./IngredientEditor"
 import StepEditor from "./StepEditor"
 import AudioRecorder from "./AudioRecorder"
 import ImageUploader from "./ImageUploader"
-import { COLOR_OPTIONS, getCategoryStyle, getCategoryDotColor } from "@/lib/utils"
+import { COLOR_OPTIONS, getCategoryStyle } from "@/lib/utils"
 import type { Category, Recipe, Ingredient, Step, StructuredRecipe } from "@/types"
 
 interface RecipeFormProps {

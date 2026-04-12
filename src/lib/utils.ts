@@ -55,7 +55,8 @@ export function getCategoryDotColor(color?: string | null): string {
 
 // Legacy — kept so existing badge renders in CategoryFilter / RecipeCard still compile.
 // These classes ARE in globals.css scope or safelist; prefer getCategoryStyle() for new code.
-export function getCategoryClasses(_color?: string | null): string {
+export function getCategoryClasses(color?: string | null): string {
+  void color
   return "bg-stone-100 text-stone-600"
 }
 
