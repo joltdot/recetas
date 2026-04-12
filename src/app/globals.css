@@ -88,7 +88,7 @@
 
 /* Backward transition (.vt-backward added/removed in BackButton.tsx) */
 :root.vt-backward ::view-transition-old(root) {
-  animation: circular-collapse 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: circular-collapse 280ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   z-index: 1;
 }
 
@@ -186,6 +186,9 @@
   /* Safe area for iOS notch / home bar */
   .pb-safe {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+  }
+  .pt-safe {
+    padding-top: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
   }
   /* Extra bottom margin so content doesn't hide behind mobile nav */
   .mb-nav {

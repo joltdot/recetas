@@ -67,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider>
           <OfflineIndicator />
           {/* Desktop top nav */}
-          <header className="hidden sm:flex sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-stone-200">
+          <header className="hidden sm:flex sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-stone-200" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
             <div className="max-w-3xl mx-auto w-full px-4 flex items-center justify-between h-14">
               <Link href="/" className="text-amber-600" aria-label="Recetas">
                 <UtensilsCrossed size={28} strokeWidth={1.8} aria-hidden="true" />
@@ -88,7 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </header>
 
           {/* Main content */}
-          <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 mb-nav">
+          <main className="flex-1 max-w-3xl mx-auto w-full px-4 pb-6 sm:py-6 mb-nav pt-safe sm:pt-6">
             {children}
           </main>
 

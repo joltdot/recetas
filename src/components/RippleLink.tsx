@@ -46,6 +46,8 @@ export default function RippleLink({
   function handleClick(e: React.MouseEvent) {
     if (!pageTransition) return
     // Fall back to normal navigation if the API isn't available (Firefox, old Safari)
+    // Also skip on mobile: the ::view-transition overlay blocks all pointer events
+    // for the entire duration (network fetch + animation), making the UI feel frozen.
     if (!("startViewTransition" in document)) return
     e.preventDefault()
 
@@ -57,8 +59,8 @@ export default function RippleLink({
       return
     }
 
-    const rippleDuration = 1000 // must match ripple-expand animation duration (ms)
-    const delay = 250           // must match setTimeout delay below (ms)
+    const rippleDuration = 600 // must match ripple-expand animation duration (ms)
+    const delay = 150          // must match setTimeout delay below (ms)
     // Delay the transition so the ripple has time to expand before the browser
     // captures the old-page snapshot (which freezes in-DOM animations).
     setTimeout(() => {
@@ -104,7 +106,7 @@ export default function RippleLink({
               height: r.size,
               zIndex: 50,
               filter: "blur(8px)",
-              animation: "ripple-expand 1000ms ease-out forwards",
+              animation: "ripple-expand 600ms ease-out forwards",
             }}
           />
         ))}

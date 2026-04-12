@@ -88,14 +88,15 @@ export default async function HomePage() {
       </div>
 
       {/* Mobile: fixed above the bottom nav bar.
-          Outer div fills bottom-0 so there's no gap behind the nav bar.
-          Inner div uses only inline styles for centering to avoid Tailwind conflicts. */}
+          Outer div is pointer-events-none so its padding area (behind the nav bar)
+          does not intercept taps on recipe cards below. Only the inner content
+          div re-enables pointer events. */}
       <div
-        className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur-sm"
+        className="sm:hidden fixed bottom-0 inset-x-0 z-20 pointer-events-none"
         style={{ paddingBottom: "calc(65px + max(env(safe-area-inset-bottom, 0px), 1rem))" }}
       >
         <div
-          className="border-t border-stone-200 px-4"
+          className="border-t border-stone-200 px-4 bg-white/95 backdrop-blur-sm pointer-events-auto"
           style={{ display: "flex", alignItems: "center", minHeight: "52px" }}
         >
           <div style={{ width: "100%" }}>
