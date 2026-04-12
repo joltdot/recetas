@@ -1,195 +1,122 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import type { StructuredRecipe } from "@/types"
 
 interface AudioRecorderProps {
   onStructured: (data: StructuredRecipe) => void
 }
 
-type Status = "idle" | "listening" | "processing" | "done" | "error"
-
+type Status = "idle" | "recording" | "processing" | "done" | "error"
 
 export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
   const [status, setStatus] = useState<Status>("idle")
   const [transcript, setTranscript] = useState("")
-  const [manualText, setManualText] = useState("")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [isSupported, setIsSupported] = useState<boolean | null>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
 
-  useEffect(() => {
-    setIsSupported(
-      typeof window !== "undefined" &&
-        ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    )
-  }, [])
-
-  function startRecording() {
+  async function startRecording() {
     setErrorMessage(null)
     setTranscript("")
-    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
-    const recognition = new SpeechRecognitionCtor()
-    recognition.lang = "es-ES"
-    recognition.continuous = true
-    recognition.interimResults = true
+    chunksRef.current = []
 
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
-      const full = Array.from(e.results)
-        .map((r) => r[0].transcript)
-        .join(" ")
-      setTranscript(full)
-    }
-
-    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-      if (e.error === "no-speech") return
-      setErrorMessage(
-        e.error === "not-allowed"
-          ? "Permiso de micrófono denegado. Actívalo en la configuración del navegador."
-          : `Error en la grabación: "${e.error}". Intenta de nuevo.`
-      )
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch {
+      setErrorMessage("Permiso de micrófono denegado. Actívalo en la configuración del navegador.")
       setStatus("error")
+      return
     }
 
-    recognition.onend = () => {
-      if (status === "listening") setStatus("idle")
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+      ? "audio/webm"
+      : "audio/mp4"
+
+    const recorder = new MediaRecorder(stream, { mimeType })
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data)
     }
 
-    recognition.start()
-    recognitionRef.current = recognition
-    setStatus("listening")
-    // Haptic feedback where supported
+    recorder.onstop = () => {
+      stream.getTracks().forEach((t) => t.stop())
+    }
+
+    recorder.start(250) // collect chunks every 250ms
+    mediaRecorderRef.current = recorder
+    setStatus("recording")
     if (navigator.vibrate) navigator.vibrate(10)
   }
 
   async function stopAndProcess() {
-    recognitionRef.current?.stop()
+    const recorder = mediaRecorderRef.current
+    if (!recorder) return
+
     setStatus("processing")
     if (navigator.vibrate) navigator.vibrate(10)
 
+    // Wait for the recorder to fully stop and flush the last chunk
+    await new Promise<void>((resolve) => {
+      recorder.addEventListener("stop", () => resolve(), { once: true })
+      recorder.stop()
+    })
+
+    const mimeType = recorder.mimeType || "audio/webm"
+    const audioBlob = new Blob(chunksRef.current, { type: mimeType })
+
     try {
-      const res = await fetch("/api/estructurar-receta", {
+      // Step 1: transcribe with Groq Whisper
+      const formData = new FormData()
+      formData.append("audio", audioBlob)
+
+      const transcribeRes = await fetch("/api/transcribir", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: transcript }),
+        body: formData,
       })
 
-      if (!res.ok) {
-        const data = await res.json()
+      if (!transcribeRes.ok) {
+        const data = await transcribeRes.json()
+        throw new Error(data.error ?? "Error al transcribir")
+      }
+
+      const { text } = await transcribeRes.json()
+      setTranscript(text)
+
+      // Step 2: structure with Claude
+      const structureRes = await fetch("/api/estructurar-receta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      })
+
+      if (!structureRes.ok) {
+        const data = await structureRes.json()
         throw new Error(data.error ?? "Error al procesar")
       }
 
-      const data: StructuredRecipe = await res.json()
+      const data: StructuredRecipe = await structureRes.json()
       setStatus("done")
       onStructured(data)
     } catch (e: unknown) {
-      setErrorMessage(e instanceof Error ? e.message : "Error al estructurar la receta")
-      setStatus("error")
-    }
-  }
-
-  async function processManual() {
-    if (manualText.trim().length < 10) {
-      setErrorMessage("El texto es demasiado corto. Describe la receta con más detalle.")
-      return
-    }
-    setErrorMessage(null)
-    setStatus("processing")
-
-    try {
-      const res = await fetch("/api/estructurar-receta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: manualText }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error ?? "Error al procesar")
-      }
-
-      const data: StructuredRecipe = await res.json()
-      setStatus("done")
-      onStructured(data)
-    } catch (e: unknown) {
-      setErrorMessage(e instanceof Error ? e.message : "Error al estructurar la receta")
+      setErrorMessage(e instanceof Error ? e.message : "Error al procesar el audio")
       setStatus("error")
     }
   }
 
   function reset() {
-    recognitionRef.current?.abort()
+    mediaRecorderRef.current?.stop()
     setStatus("idle")
     setTranscript("")
-    setManualText("")
     setErrorMessage(null)
   }
 
-  // Loading state while checking support
-  if (isSupported === null) return null
-
-  // Safari / iOS fallback: textarea + AI processing
-  if (!isSupported) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-start gap-2 text-sm text-stone-500 bg-stone-50 rounded-xl p-3 border border-stone-200">
-          <svg className="w-5 h-5 shrink-0 mt-0.5 text-stone-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-          </svg>
-          <span>Tu navegador no admite grabación de voz (requiere Chrome o Edge). Escribe o pega el texto de la receta y la IA lo estructurará.</span>
-        </div>
-
-        {status === "done" ? (
-          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <svg className="w-6 h-6 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-green-800 text-sm font-medium">¡Receta estructurada! Revisa los campos del formulario.</span>
-            <button type="button" onClick={reset} className="ml-auto btn-ghost text-sm px-3 py-1.5 min-h-0">
-              Intentar de nuevo
-            </button>
-          </div>
-        ) : (
-          <>
-            <textarea
-              value={manualText}
-              onChange={(e) => setManualText(e.target.value)}
-              placeholder="Ej: Tortilla española para 4 personas. Necesitas 4 huevos, 3 patatas medianas y media cebolla. Primero fríe las patatas con la cebolla en aceite de oliva durante 20 minutos. Luego mezcla con los huevos batidos y cuaja en la sartén 5 minutos por cada lado..."
-              rows={5}
-              className="input resize-none"
-              disabled={status === "processing"}
-            />
-            {errorMessage && (
-              <p className="text-sm text-red-600">{errorMessage}</p>
-            )}
-            <button
-              type="button"
-              onClick={processManual}
-              disabled={status === "processing" || manualText.trim().length < 10}
-              className="btn-primary w-full"
-            >
-              {status === "processing" ? (
-                <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden>
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Procesando con IA...
-                </>
-              ) : (
-                "✨ Estructurar con IA"
-              )}
-            </button>
-          </>
-        )}
-      </div>
-    )
-  }
-
-  // Chrome / Edge: voice recording
   return (
     <div className="space-y-4">
-      {/* Idle state */}
+      {/* Idle */}
       {status === "idle" && (
         <div className="flex flex-col items-center gap-4 py-2">
           <button
@@ -206,36 +133,27 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
         </div>
       )}
 
-      {/* Listening state */}
-      {status === "listening" && (
-        <div className="space-y-4">
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-40" />
-              <button
-                type="button"
-                onClick={stopAndProcess}
-                className="relative w-20 h-20 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg"
-                aria-label="Detener y procesar grabación"
-              >
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                  <rect x="6" y="6" width="12" height="12" rx="2" />
-                </svg>
-              </button>
-            </div>
-            <p className="text-red-600 font-medium text-sm animate-pulse">Grabando... presiona para procesar</p>
+      {/* Recording */}
+      {status === "recording" && (
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-40" />
+            <button
+              type="button"
+              onClick={stopAndProcess}
+              className="relative w-20 h-20 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg"
+              aria-label="Detener y procesar grabación"
+            >
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            </button>
           </div>
-
-          {transcript && (
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3">
-              <p className="text-xs text-stone-400 mb-1.5 font-medium uppercase tracking-wide">Transcripción en vivo</p>
-              <p className="text-stone-700 text-sm leading-relaxed">{transcript}</p>
-            </div>
-          )}
+          <p className="text-red-600 font-medium text-sm animate-pulse">Grabando... presiona para procesar</p>
         </div>
       )}
 
-      {/* Processing state */}
+      {/* Processing */}
       {status === "processing" && (
         <div className="flex flex-col items-center gap-3 py-6">
           <svg className="w-10 h-10 text-amber-500 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden>
@@ -243,27 +161,42 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
           <p className="text-stone-600 font-medium">Procesando con IA...</p>
-          <p className="text-stone-400 text-sm">Esto tarda unos segundos</p>
+          {transcript ? (
+            <div className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3">
+              <p className="text-xs text-stone-400 mb-1 font-medium uppercase tracking-wide">Transcripción</p>
+              <p className="text-stone-700 text-sm leading-relaxed">{transcript}</p>
+            </div>
+          ) : (
+            <p className="text-stone-400 text-sm">Transcribiendo audio...</p>
+          )}
         </div>
       )}
 
-      {/* Done state */}
+      {/* Done */}
       {status === "done" && (
-        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-          <svg className="w-6 h-6 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="flex-1">
-            <p className="text-green-800 font-medium text-sm">¡Receta detectada!</p>
-            <p className="text-green-700 text-xs">Revisa y ajusta los campos del formulario.</p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <svg className="w-6 h-6 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-green-800 font-medium text-sm">¡Receta detectada!</p>
+              <p className="text-green-700 text-xs">Revisa y ajusta los campos del formulario.</p>
+            </div>
+            <button type="button" onClick={reset} className="btn-ghost text-sm px-3 py-1.5 min-h-0">
+              Grabar de nuevo
+            </button>
           </div>
-          <button type="button" onClick={reset} className="btn-ghost text-sm px-3 py-1.5 min-h-0">
-            Grabar de nuevo
-          </button>
+          {transcript && (
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3">
+              <p className="text-xs text-stone-400 mb-1 font-medium uppercase tracking-wide">Transcripción</p>
+              <p className="text-stone-700 text-sm leading-relaxed">{transcript}</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Error state */}
+      {/* Error */}
       {status === "error" && (
         <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
           <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
