@@ -20,6 +20,7 @@ async function getRecipe(id: string): Promise<Recipe | null> {
       prepTime: schema.recipes.prepTime,
       servings: schema.recipes.servings,
       source: schema.recipes.source,
+      audioUrl: schema.recipes.audioUrl,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {
@@ -95,9 +96,32 @@ export default async function RecipePage({ params }: { params: { id: string } })
         </div>
       </div>
 
+      {/* Audio recording */}
+      {recipe.audioUrl && (
+        <section className="card">
+          <h2 className="font-serif text-xl font-semibold mb-3 text-stone-800 flex items-center gap-2">
+            <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5V18M7.5 9.75V18M11.25 6v12M15 3.75V18M18.75 8.25V18" />
+            </svg>
+            Grabación original
+          </h2>
+          <audio
+            src={recipe.audioUrl}
+            controls
+            className="w-full rounded-lg"
+            preload="metadata"
+          />
+        </section>
+      )}
+
       {/* Ingredients */}
       <section className="card">
-        <h2 className="font-serif text-xl font-semibold mb-4 text-stone-800">Ingredientes</h2>
+        <h2 className="font-serif text-xl font-semibold mb-4 text-stone-800 flex items-center gap-2">
+          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 001.659 1.591L19.5 14.5M14.25 3.104c.251.023.501.05.75.082M19.5 14.5l-1.409 4.853A2.25 2.25 0 0115.926 21H8.074a2.25 2.25 0 01-2.165-1.647L4.5 14.5m15 0H4.5" />
+          </svg>
+          Ingredientes
+        </h2>
         <ul className="space-y-2">
           {(recipe.ingredients as { amount: string; unit: string; name: string }[]).map((ing, i) => (
             <li key={i} className="flex items-start gap-3 py-1 border-b border-stone-100 last:border-0">
@@ -114,7 +138,12 @@ export default async function RecipePage({ params }: { params: { id: string } })
 
       {/* Steps */}
       <section className="card">
-        <h2 className="font-serif text-xl font-semibold mb-4 text-stone-800">Preparación</h2>
+        <h2 className="font-serif text-xl font-semibold mb-4 text-stone-800 flex items-center gap-2">
+          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+          </svg>
+          Preparación
+        </h2>
         <ol className="space-y-4">
           {(recipe.steps as { order: number; instruction: string }[])
             .sort((a, b) => a.order - b.order)

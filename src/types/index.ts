@@ -26,6 +26,7 @@ export interface Recipe {
   prepTime: number | null
   servings: number | null
   source: string | null
+  audioUrl: string | null
   createdAt: Date | null
   updatedAt: Date | null
   category?: Category | null

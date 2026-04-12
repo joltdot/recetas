@@ -18,6 +18,7 @@ export const recipes = pgTable("recipes", {
   prepTime: integer("prep_time"),
   servings: integer("servings"),
   source: text("source"),
+  audioUrl: text("audio_url"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 })

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",
+    "@vercel/blob": "^2.3.3",
     "@vercel/postgres": "^0.10.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",

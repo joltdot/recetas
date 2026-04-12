@@ -37,11 +37,13 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState<string | null>(null)
 
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [audioPrefilled, setAudioPrefilled] = useState(false)
 
-  function handleAudioResult(data: StructuredRecipe) {
+  function handleAudioResult(data: StructuredRecipe, url: string | null) {
+    setAudioUrl(url)
     if (data.title) setTitle(data.title)
     if (data.description) setDescription(data.description)
     if (data.ingredients?.length) setIngredients(data.ingredients)
@@ -134,6 +136,7 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
         prepTime: prepTime ? parseInt(prepTime) : null,
         servings: servings ? parseInt(servings) : null,
         source,
+        audioUrl: audioUrl ?? null,
       }
 
       const res = await fetch(

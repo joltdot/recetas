@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import type { StructuredRecipe } from "@/types"
 
 interface AudioRecorderProps {
-  onStructured: (data: StructuredRecipe) => void
+  onStructured: (data: StructuredRecipe, audioUrl: string | null) => void
 }
 
 type Status = "idle" | "recording" | "processing" | "done" | "error"
@@ -69,14 +69,14 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
     const audioBlob = new Blob(chunksRef.current, { type: mimeType })
 
     try {
-      // Step 1: transcribe with Groq Whisper
       const formData = new FormData()
       formData.append("audio", audioBlob)
 
-      const transcribeRes = await fetch("/api/transcribir", {
-        method: "POST",
-        body: formData,
-      })
+      // Step 1: transcribe + upload audio in parallel
+      const [transcribeRes, uploadRes] = await Promise.all([
+        fetch("/api/transcribir", { method: "POST", body: formData }),
+        fetch("/api/upload-audio", { method: "POST", body: formData }),
+      ])
 
       if (!transcribeRes.ok) {
         const data = await transcribeRes.json()
@@ -85,6 +85,9 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
 
       const { text } = await transcribeRes.json()
       setTranscript(text)
+
+      // Audio URL is best-effort — if upload fails we still proceed
+      const audioUrl: string | null = uploadRes.ok ? (await uploadRes.json()).url : null
 
       // Step 2: structure with Claude
       const structureRes = await fetch("/api/estructurar-receta", {
@@ -100,7 +103,7 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
 
       const data: StructuredRecipe = await structureRes.json()
       setStatus("done")
-      onStructured(data)
+      onStructured(data, audioUrl)
     } catch (e: unknown) {
       setErrorMessage(e instanceof Error ? e.message : "Error al procesar el audio")
       setStatus("error")
