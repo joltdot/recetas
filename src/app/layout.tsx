@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth"
 import AuthProvider from "@/components/AuthProvider"
 import InstallBanner from "@/components/InstallBanner"
 import SignOutButton from "@/components/SignOutButton"
+import NavLink from "@/components/NavLink"
 import "./globals.css"
 
 const inter = Inter({
@@ -84,24 +85,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {/* Mobile bottom tab bar */}
           <nav className="sm:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-stone-200 pb-safe">
             <div className="flex">
-              <Link
-                href="/"
-                className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-stone-500 active:text-amber-600 min-h-[56px]"
-              >
+              <NavLink href="/">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                 </svg>
                 <span className="text-[10px] font-medium">Inicio</span>
-              </Link>
-              <Link
-                href="/receta/nueva"
-                className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 text-stone-500 active:text-amber-600 min-h-[56px]"
-              >
+              </NavLink>
+              <NavLink href="/receta/nueva">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 <span className="text-[10px] font-medium">Nueva</span>
-              </Link>
+              </NavLink>
             </div>
           </nav>
         </AuthProvider>

@@ -2,11 +2,13 @@ export interface Ingredient {
   amount: string
   unit: string
   name: string
+  imageUrl?: string | null
 }
 
 export interface Step {
   order: number
   instruction: string
+  imageUrl?: string | null
 }
 
 export interface Category {
@@ -27,6 +29,7 @@ export interface Recipe {
   servings: number | null
   source: string | null
   audioUrl: string | null
+  images: string[] | null
   createdAt: Date | null
   updatedAt: Date | null
   category?: Category | null

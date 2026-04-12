@@ -19,6 +19,8 @@ async function getRecipe(id: string): Promise<Recipe | null> {
       prepTime: schema.recipes.prepTime,
       servings: schema.recipes.servings,
       source: schema.recipes.source,
+      audioUrl: schema.recipes.audioUrl,
+      images: schema.recipes.images,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {

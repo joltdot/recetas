@@ -4,14 +4,14 @@ import { Suspense } from "react"
 import { db, schema } from "@/db"
 import { asc, desc, eq } from "drizzle-orm"
 import CategoryFilter from "@/components/CategoryFilter"
-import RecipeList from "@/components/RecipeList"
+import RecipeGrid from "@/components/RecipeGrid"
 import type { Recipe, Category } from "@/types"
 
 interface HomeProps {
   searchParams: { categoria?: string }
 }
 
-async function getRecipes(categoriaSlug?: string): Promise<Recipe[]> {
+async function getRecipes(): Promise<Recipe[]> {
   const rows = await db
     .select({
       id: schema.recipes.id,
@@ -23,6 +23,8 @@ async function getRecipes(categoriaSlug?: string): Promise<Recipe[]> {
       prepTime: schema.recipes.prepTime,
       servings: schema.recipes.servings,
       source: schema.recipes.source,
+      audioUrl: schema.recipes.audioUrl,
+      images: schema.recipes.images,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {
@@ -36,9 +38,6 @@ async function getRecipes(categoriaSlug?: string): Promise<Recipe[]> {
     .leftJoin(schema.categories, eq(schema.recipes.categoryId, schema.categories.id))
     .orderBy(desc(schema.recipes.createdAt))
 
-  if (categoriaSlug) {
-    return rows.filter((r) => r.category?.slug === categoriaSlug) as Recipe[]
-  }
   return rows as Recipe[]
 }
 
@@ -47,27 +46,44 @@ async function getCategories(): Promise<Category[]> {
 }
 
 export default async function HomePage({ searchParams }: HomeProps) {
-  const [recipes, categories] = await Promise.all([
-    getRecipes(searchParams.categoria),
-    getCategories(),
-  ])
+  const [recipes, categories] = await Promise.all([getRecipes(), getCategories()])
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-bold text-stone-900">
-          {searchParams.categoria
-            ? categories.find((c) => c.slug === searchParams.categoria)?.name ?? "Recetas"
-            : "Mis Recetas"}
-        </h1>
-        <span className="text-sm text-stone-400">{recipes.length} {recipes.length === 1 ? "receta" : "recetas"}</span>
+      <h1 className="font-serif text-2xl font-bold text-stone-900">Mis Recetas</h1>
+
+      {/* Desktop: inline */}
+      <div className="hidden sm:block">
+        <Suspense>
+          <CategoryFilter categories={categories} />
+        </Suspense>
       </div>
 
-      <Suspense>
-        <CategoryFilter categories={categories} />
-      </Suspense>
+      {/* Extra bottom padding on mobile so grid clears the fixed category bar */}
+      <div className="pb-16 sm:pb-0">
+        <Suspense>
+          <RecipeGrid allRecipes={recipes} />
+        </Suspense>
+      </div>
 
-      <RecipeList recipes={recipes} activeCategory={searchParams.categoria ?? null} />
+      {/* Mobile: fixed above the bottom nav bar.
+          Outer div fills bottom-0 so there's no gap behind the nav bar.
+          Inner div uses only inline styles for centering to avoid Tailwind conflicts. */}
+      <div
+        className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 backdrop-blur-sm"
+        style={{ paddingBottom: "calc(65px + max(env(safe-area-inset-bottom, 0px), 1rem))" }}
+      >
+        <div
+          className="border-t border-stone-200 px-4"
+          style={{ display: "flex", alignItems: "center", minHeight: "52px" }}
+        >
+          <div style={{ width: "100%" }}>
+            <Suspense>
+              <CategoryFilter categories={categories} />
+            </Suspense>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

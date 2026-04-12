@@ -1,6 +1,7 @@
 "use client"
 
 import type { Step } from "@/types"
+import ImageUploader from "./ImageUploader"
 
 interface StepEditorProps {
   steps: Step[]
@@ -10,6 +11,11 @@ interface StepEditorProps {
 export default function StepEditor({ steps, onChange }: StepEditorProps) {
   function updateInstruction(index: number, instruction: string) {
     const updated = steps.map((s, i) => (i === index ? { ...s, instruction } : s))
+    onChange(updated)
+  }
+
+  function updateImage(index: number, imageUrl: string | null) {
+    const updated = steps.map((s, i) => (i === index ? { ...s, imageUrl } : s))
     onChange(updated)
   }
 
@@ -82,14 +88,15 @@ export default function StepEditor({ steps, onChange }: StepEditorProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+            <ImageUploader
+              value={step.imageUrl ?? null}
+              onChange={(url) => updateImage(i, url)}
+              compact
+            />
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={add}
-        className="btn-secondary w-full"
-      >
+      <button type="button" onClick={add} className="btn-secondary w-full">
         + Agregar paso
       </button>
     </div>

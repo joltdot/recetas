@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl } = body
+    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, images } = body
 
     if (!title || !ingredients || !steps) {
       return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 })
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const [recipe] = await db
       .insert(schema.recipes)
-      .values({ title, description, ingredients, steps, categoryId, prepTime, servings, source: source ?? "manual", audioUrl: audioUrl ?? null })
+      .values({ title, description, ingredients, steps, categoryId, prepTime, servings, source: source ?? "manual", audioUrl: audioUrl ?? null, images: images ?? [] })
       .returning()
 
     return NextResponse.json(recipe, { status: 201 })

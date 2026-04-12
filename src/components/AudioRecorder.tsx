@@ -69,13 +69,17 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
     const audioBlob = new Blob(chunksRef.current, { type: mimeType })
 
     try {
-      const formData = new FormData()
-      formData.append("audio", audioBlob)
+      // Each fetch needs its own FormData — sharing one object across parallel
+      // requests causes browsers to send an empty body on the second request.
+      const transcribeForm = new FormData()
+      transcribeForm.append("audio", audioBlob)
+      const uploadForm = new FormData()
+      uploadForm.append("audio", audioBlob)
 
       // Step 1: transcribe + upload audio in parallel
       const [transcribeRes, uploadRes] = await Promise.all([
-        fetch("/api/transcribir", { method: "POST", body: formData }),
-        fetch("/api/upload-audio", { method: "POST", body: formData }),
+        fetch("/api/transcribir", { method: "POST", body: transcribeForm }),
+        fetch("/api/upload-audio", { method: "POST", body: uploadForm }),
       ])
 
       if (!transcribeRes.ok) {

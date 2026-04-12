@@ -43,7 +43,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const { title, description, ingredients, steps, categoryId, prepTime, servings, source } = body
+    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, images } = body
 
     if (!title || !ingredients || !steps) {
       return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 })
@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const [updated] = await db
       .update(schema.recipes)
-      .set({ title, description, ingredients, steps, categoryId, prepTime, servings, source, updatedAt: new Date() })
+      .set({ title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl: audioUrl ?? null, images: images ?? [], updatedAt: new Date() })
       .where(eq(schema.recipes.id, params.id))
       .returning()
 

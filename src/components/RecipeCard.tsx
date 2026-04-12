@@ -1,5 +1,7 @@
-import Link from "next/link"
+"use client"
+
 import { cn, formatTime, CATEGORY_COLORS } from "@/lib/utils"
+import RippleLink from "./RippleLink"
 import type { Recipe } from "@/types"
 
 interface RecipeCardProps {
@@ -11,9 +13,11 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   const categoryName = recipe.category?.name
 
   return (
-    <Link
+    <RippleLink
       href={`/receta/${recipe.id}`}
-      className="card block group active:scale-[0.98] transition-transform min-h-[80px]"
+      rippleColor="bg-amber-300"
+      pageTransition
+      className="card block group min-h-[80px]"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         {categorySlug && (
@@ -52,6 +56,6 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </span>
         )}
       </div>
-    </Link>
+    </RippleLink>
   )
 }

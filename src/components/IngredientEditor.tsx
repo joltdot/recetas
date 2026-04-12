@@ -1,6 +1,7 @@
 "use client"
 
 import type { Ingredient } from "@/types"
+import ImageUploader from "./ImageUploader"
 
 interface IngredientEditorProps {
   ingredients: Ingredient[]
@@ -8,7 +9,7 @@ interface IngredientEditorProps {
 }
 
 export default function IngredientEditor({ ingredients, onChange }: IngredientEditorProps) {
-  function update(index: number, field: keyof Ingredient, value: string) {
+  function update(index: number, field: keyof Ingredient, value: string | null) {
     const updated = ingredients.map((ing, i) =>
       i === index ? { ...ing, [field]: value } : ing
     )
@@ -53,6 +54,11 @@ export default function IngredientEditor({ ingredients, onChange }: IngredientEd
               required
               aria-label="Nombre del ingrediente"
             />
+            <ImageUploader
+              value={ing.imageUrl ?? null}
+              onChange={(url) => update(i, "imageUrl", url)}
+              compact
+            />
             <button
               type="button"
               onClick={() => remove(i)}
@@ -66,11 +72,7 @@ export default function IngredientEditor({ ingredients, onChange }: IngredientEd
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={add}
-        className="btn-secondary w-full"
-      >
+      <button type="button" onClick={add} className="btn-secondary w-full">
         + Agregar ingrediente
       </button>
     </div>

@@ -6,7 +6,10 @@ import { db, schema } from "@/db"
 import { eq } from "drizzle-orm"
 import { cn, formatTime, CATEGORY_COLORS } from "@/lib/utils"
 import DeleteButton from "@/components/DeleteButton"
-import type { Recipe } from "@/types"
+import RecipeCarousel from "@/components/RecipeCarousel"
+import AudioPlayer from "@/components/AudioPlayer"
+import BackButton from "@/components/BackButton"
+import type { Recipe, Ingredient, Step } from "@/types"
 
 async function getRecipe(id: string): Promise<Recipe | null> {
   const rows = await db
@@ -21,6 +24,7 @@ async function getRecipe(id: string): Promise<Recipe | null> {
       servings: schema.recipes.servings,
       source: schema.recipes.source,
       audioUrl: schema.recipes.audioUrl,
+      images: schema.recipes.images,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {
@@ -49,14 +53,27 @@ export default async function RecipePage({ params }: { params: { id: string } })
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <Link href="/" className="inline-flex items-center gap-1 text-stone-500 text-sm mb-4 hover:text-stone-700 transition-colors min-h-[44px]">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          Volver
-        </Link>
+        {/* Header carousel with back button overlaid */}
+        {recipe.images && recipe.images.length > 0 ? (
+          <div className="relative mb-4">
+            <RecipeCarousel images={recipe.images} />
+            <BackButton className="absolute top-3 left-3 inline-flex items-center gap-1 text-white text-sm bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 transition-colors min-h-[36px]">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Volver
+            </BackButton>
+          </div>
+        ) : (
+          <BackButton className="inline-flex items-center gap-1 text-stone-500 text-sm mb-4 hover:text-stone-700 transition-colors min-h-[44px]">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver
+          </BackButton>
+        )}
 
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="flex flex-wrap items-center gap-2 mb-3">
           {categorySlug && (
             <span className={cn("badge", CATEGORY_COLORS[categorySlug] ?? "bg-stone-100 text-stone-600")}>
               {categoryName}
@@ -65,6 +82,7 @@ export default async function RecipePage({ params }: { params: { id: string } })
           {recipe.source === "audio" && (
             <span className="badge bg-violet-100 text-violet-700">🎙 Creada con IA</span>
           )}
+          {recipe.audioUrl && <AudioPlayer src={recipe.audioUrl} />}
         </div>
 
         <h1 className="font-serif text-3xl font-bold text-stone-900 leading-tight mb-2">
@@ -96,24 +114,6 @@ export default async function RecipePage({ params }: { params: { id: string } })
         </div>
       </div>
 
-      {/* Audio recording */}
-      {recipe.audioUrl && (
-        <section className="card">
-          <h2 className="font-serif text-xl font-semibold mb-3 text-stone-800 flex items-center gap-2">
-            <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5V18M7.5 9.75V18M11.25 6v12M15 3.75V18M18.75 8.25V18" />
-            </svg>
-            Grabación original
-          </h2>
-          <audio
-            src={recipe.audioUrl}
-            controls
-            className="w-full rounded-lg"
-            preload="metadata"
-          />
-        </section>
-      )}
-
       {/* Ingredients */}
       <section className="card">
         <h2 className="font-serif text-xl font-semibold mb-4 text-stone-800 flex items-center gap-2">
@@ -123,14 +123,22 @@ export default async function RecipePage({ params }: { params: { id: string } })
           Ingredientes
         </h2>
         <ul className="space-y-2">
-          {(recipe.ingredients as { amount: string; unit: string; name: string }[]).map((ing, i) => (
+          {(recipe.ingredients as Ingredient[]).map((ing, i) => (
             <li key={i} className="flex items-start gap-3 py-1 border-b border-stone-100 last:border-0">
               <span className="text-amber-500 mt-0.5">•</span>
-              <span className="text-stone-700">
+              <span className="text-stone-700 flex-1">
                 {ing.amount && <strong className="font-semibold">{ing.amount} </strong>}
                 {ing.unit && <span className="text-stone-500">{ing.unit} </span>}
                 {ing.name}
               </span>
+              {ing.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={ing.imageUrl}
+                  alt={ing.name}
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                />
+              )}
             </li>
           ))}
         </ul>
@@ -145,14 +153,24 @@ export default async function RecipePage({ params }: { params: { id: string } })
           Preparación
         </h2>
         <ol className="space-y-4">
-          {(recipe.steps as { order: number; instruction: string }[])
+          {(recipe.steps as Step[])
             .sort((a, b) => a.order - b.order)
             .map((step) => (
               <li key={step.order} className="flex gap-4">
                 <span className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
                   {step.order}
                 </span>
-                <p className="text-stone-700 leading-relaxed pt-1">{step.instruction}</p>
+                <div className="flex-1 space-y-2 pt-1">
+                  <p className="text-stone-700 leading-relaxed">{step.instruction}</p>
+                  {step.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={step.imageUrl}
+                      alt={`Paso ${step.order}`}
+                      className="w-full rounded-xl object-cover aspect-video"
+                    />
+                  )}
+                </div>
               </li>
             ))}
         </ol>

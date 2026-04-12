@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import IngredientEditor from "./IngredientEditor"
 import StepEditor from "./StepEditor"
 import AudioRecorder from "./AudioRecorder"
+import ImageUploader from "./ImageUploader"
 import type { Category, Recipe, Ingredient, Step, StructuredRecipe } from "@/types"
 
 interface RecipeFormProps {
@@ -37,7 +38,8 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [categoryError, setCategoryError] = useState<string | null>(null)
 
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [images, setImages] = useState<string[]>((initialData?.images as string[]) ?? [])
+  const [audioUrl, setAudioUrl] = useState<string | null>(initialData?.audioUrl ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [audioPrefilled, setAudioPrefilled] = useState(false)
@@ -137,6 +139,7 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
         servings: servings ? parseInt(servings) : null,
         source,
         audioUrl: audioUrl ?? null,
+        images,
       }
 
       const res = await fetch(
@@ -172,6 +175,35 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
           <AudioRecorder onStructured={handleAudioResult} />
         </section>
       )}
+
+      {/* Recipe images */}
+      <section className="card space-y-3">
+        <h2 className="font-serif text-lg font-semibold text-stone-800">Fotos de la receta</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {images.map((url, i) => (
+            <div key={i} className="relative aspect-video rounded-xl overflow-hidden group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
+                aria-label="Eliminar foto"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <ImageUploader
+            value={null}
+            onChange={(url) => { if (url) setImages((prev) => [...prev, url]) }}
+            label="Agregar foto"
+            aspect="video"
+          />
+        </div>
+      </section>
 
       {/* Audio prefill notice */}
       {audioPrefilled && (
