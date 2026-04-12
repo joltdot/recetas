@@ -3,8 +3,12 @@ export const dynamic = "force-dynamic"
 import { Suspense } from "react"
 import { db, schema } from "@/db"
 import { asc, desc, eq } from "drizzle-orm"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { UtensilsCrossed } from "lucide-react"
 import CategoryFilter from "@/components/CategoryFilter"
 import RecipeGrid from "@/components/RecipeGrid"
+import SignOutButton from "@/components/SignOutButton"
 import type { Recipe, Category } from "@/types"
 
 async function getRecipes(): Promise<Recipe[]> {
@@ -27,6 +31,7 @@ async function getRecipes(): Promise<Recipe[]> {
         id: schema.categories.id,
         name: schema.categories.name,
         slug: schema.categories.slug,
+        color: schema.categories.color,
         createdAt: schema.categories.createdAt,
       },
     })
@@ -42,11 +47,24 @@ async function getCategories(): Promise<Category[]> {
 }
 
 export default async function HomePage() {
-  const [recipes, categories] = await Promise.all([getRecipes(), getCategories()])
+  const [recipes, categories, session] = await Promise.all([getRecipes(), getCategories(), getServerSession(authOptions)])
 
   return (
     <div className="space-y-5">
-      <h1 className="font-serif text-2xl font-bold text-stone-900">Mis Recetas</h1>
+      {/* Mobile: icon + title + profile in one row */}
+      <div className="flex items-center gap-3 sm:hidden">
+        <UtensilsCrossed size={26} strokeWidth={1.8} className="text-amber-600 shrink-0" />
+        <h1 className="font-serif text-3xl font-bold text-stone-900 flex-1">Recetas</h1>
+        {session?.user && (
+          <SignOutButton
+            name={session.user.name ?? undefined}
+            image={session.user.image ?? undefined}
+            compact
+          />
+        )}
+      </div>
+      {/* Desktop: just the title */}
+      <h1 className="hidden sm:block font-serif text-2xl font-bold text-stone-900">Recetas</h1>
 
       {/* Desktop: inline */}
       <div className="hidden sm:block">

@@ -2,17 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Slide page transition (e.g. home → nueva receta) ──────────────────────
+   Add .vt-slide to <html> before startViewTransition, remove in .finished.  */
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slide-out-to-left {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(-22%); opacity: 0.4; }
+}
+:root.vt-slide ::view-transition-new(root) {
+  animation: slide-in-from-right 380ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 1;
+}
+:root.vt-slide ::view-transition-old(root) {
+  animation: slide-out-to-left 380ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 0;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────────*/
+@keyframes empty-state-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes empty-state-out {
+  from { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 0; transform: translateY(14px); }
+}
+.animate-empty-in  { animation: empty-state-in  250ms ease-out forwards; }
+.animate-empty-out { animation: empty-state-out 180ms ease-in  forwards; }
+
+/* ── Dropdown pop-up ────────────────────────────────────────────────────────
+   Plays once on mount since the element is conditionally rendered.           */
+@keyframes dropdown-open {
+  from { opacity: 0; transform: scale(0.93) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+@keyframes dropdown-close {
+  from { opacity: 1; transform: scale(1)    translateY(0);    }
+  to   { opacity: 0; transform: scale(0.93) translateY(-6px); }
+}
+.animate-dropdown {
+  animation: dropdown-open 180ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: top right;
+}
+.animate-dropdown-close {
+  animation: dropdown-close 140ms ease-out forwards;
+}
+
 /* ── Circular reveal page transition (View Transitions API) ────────────────
    --ripple-x / --ripple-y are set in px from the tap point via JS.
    The new page is clipped to a circle that expands from that point.        */
 @keyframes circular-reveal {
-  from { clip-path: circle(0px at var(--ripple-x, 50%) var(--ripple-y, 50%)); }
+  from { clip-path: circle(var(--ripple-start-radius, 0px) at var(--ripple-x, 50%) var(--ripple-y, 50%)); }
   to   { clip-path: circle(200vmax at var(--ripple-x, 50%) var(--ripple-y, 50%)); }
 }
 
 /* Forward transition (default) */
 ::view-transition-new(root) {
-  animation: circular-reveal 500ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: circular-reveal var(--ripple-transition-duration, 1000ms) ease-out forwards;
 }
 
 ::view-transition-old(root) {
@@ -37,18 +86,51 @@
 }
 
 
+/* Respect reduced-motion: disable view transitions entirely */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(root),
+  ::view-transition-old(root),
+  :root.vt-backward ::view-transition-old(root),
+  :root.vt-backward ::view-transition-new(root),
+  :root.vt-slide ::view-transition-new(root),
+  :root.vt-slide ::view-transition-old(root) {
+    animation: none !important;
+  }
+}
+
 @layer base {
   body {
     @apply bg-stone-50 text-stone-900 font-sans;
+    /* Prevent pull-to-refresh / overscroll bounce on the page body.
+       Individual scrollable containers can override as needed. */
+    overscroll-behavior-y: contain;
   }
   h1,
   h2,
   h3 {
     @apply font-serif;
   }
-  /* iOS momentum scrolling */
+  /* iOS momentum scrolling + eliminate 300ms tap delay on older browsers */
   html {
     -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+    /* Fix iOS Safari 100vh bug: use dvh when available so full-height
+       layouts account for the collapsible Safari toolbar. */
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  /* iOS Safari auto-zooms inputs with font-size < 16px.
+     The .input class already uses text-base (16px), but ensure <select>
+     and <textarea> inside it inherit the same size to avoid zoom. */
+  select,
+  textarea,
+  input {
+    font-size: max(16px, 1em);
+  }
+  /* Prevent iOS Safari from auto-linking phone numbers in recipe text */
+  a[href^="tel"] {
+    color: inherit;
+    text-decoration: none;
   }
 }
 
@@ -104,5 +186,10 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  /* Contain horizontal scroll within pill-filter containers so swipe
+     doesn't accidentally scroll the page behind it. */
+  .overscroll-x-contain {
+    overscroll-behavior-x: contain;
   }
 }

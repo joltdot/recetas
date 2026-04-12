@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
           id: schema.categories.id,
           name: schema.categories.name,
           slug: schema.categories.slug,
+          color: schema.categories.color,
           createdAt: schema.categories.createdAt,
         },
       })

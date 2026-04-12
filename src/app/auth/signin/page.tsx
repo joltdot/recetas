@@ -11,7 +11,7 @@ function SignInContent() {
     <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">
       <div className="card max-w-sm w-full text-center space-y-6 p-8">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-stone-900 mb-1">Mis Recetas</h1>
+          <h1 className="font-serif text-3xl font-bold text-stone-900 mb-1">Recetas</h1>
           <p className="text-stone-400 text-sm">Tu recetario personal con IA</p>
         </div>
 

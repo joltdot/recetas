@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import Link from "next/link"
+import RippleLink from "@/components/RippleLink"
+import { UtensilsCrossed } from "lucide-react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import AuthProvider from "@/components/AuthProvider"
 import InstallBanner from "@/components/InstallBanner"
 import SignOutButton from "@/components/SignOutButton"
 import NavLink from "@/components/NavLink"
+import OfflineIndicator from "@/components/OfflineIndicator"
 import "./globals.css"
 
 const inter = Inter({
@@ -20,21 +23,34 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: "Mis Recetas",
+  title: "Recetas",
   description: "Guarda tus recetas de cocina con inteligencia artificial",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Recetas",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 }
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
   viewportFit: "cover",
-  themeColor: "#f59e0b",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f59e0b" },
+    { media: "(prefers-color-scheme: dark)", color: "#f59e0b" },
+  ],
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -44,16 +60,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
       <body className="antialiased min-h-screen flex flex-col">
         <AuthProvider>
+          <OfflineIndicator />
           {/* Desktop top nav */}
           <header className="hidden sm:flex sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-stone-200">
             <div className="max-w-3xl mx-auto w-full px-4 flex items-center justify-between h-14">
-              <Link href="/" className="font-serif text-xl font-bold text-amber-600 tracking-tight">
-                Mis Recetas
+              <Link href="/" className="text-amber-600" aria-label="Recetas">
+                <UtensilsCrossed size={28} strokeWidth={1.8} aria-hidden="true" />
               </Link>
               <div className="flex items-center gap-3">
-                <Link href="/receta/nueva" className="btn-primary text-sm px-4 py-2 min-h-0">
+                <RippleLink href="/receta/nueva" pageTransition transitionType="slide" rippleColor="bg-white/30" className="btn-primary text-sm px-4 py-2 min-h-0">
                   + Nueva Receta
-                </Link>
+                </RippleLink>
                 {session?.user && (
                   <SignOutButton
                     name={session.user.name ?? undefined}
@@ -63,17 +80,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </div>
           </header>
-
-          {/* Mobile: user avatar top-right */}
-          {session?.user && (
-            <div className="sm:hidden fixed top-3 right-4 z-40">
-              <SignOutButton
-                name={session.user.name ?? undefined}
-                image={session.user.image ?? undefined}
-                compact
-              />
-            </div>
-          )}
 
           {/* Main content */}
           <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 mb-nav">
@@ -91,7 +97,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </svg>
                 <span className="text-[10px] font-medium">Inicio</span>
               </NavLink>
-              <NavLink href="/receta/nueva">
+              <NavLink href="/receta/nueva" transitionType="slide">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>

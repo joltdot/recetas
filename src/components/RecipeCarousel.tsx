@@ -69,6 +69,8 @@ export default function RecipeCarousel({ images }: RecipeCarouselProps) {
               <img
                 src={url}
                 alt={`Foto ${i + 1}`}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding={i === 0 ? "sync" : "async"}
                 className="w-full h-full object-cover"
                 draggable={false}
               />
@@ -78,28 +80,33 @@ export default function RecipeCarousel({ images }: RecipeCarouselProps) {
 
         {/* Dot indicators — only shown when there is more than one image */}
         {images.length > 1 && (
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-0 pointer-events-none">
             {images.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
                 aria-label={`Ir a imagen ${i + 1}`}
-                className={`relative h-1.5 rounded-full overflow-hidden transition-all duration-300 pointer-events-auto ${
-                  i === current ? "w-8 bg-white/30" : "w-1.5 bg-white/50"
-                }`}
+                className="pointer-events-auto flex items-end justify-center px-1 py-3"
+                style={{ minWidth: 28, minHeight: 44 }}
               >
-                {i === current && (
-                  // key changes with `current` so React remounts the span on
-                  // every slide change, restarting the CSS animation from 0.
-                  <span
-                    key={current}
-                    className="absolute inset-y-0 left-0 rounded-full bg-white"
-                    style={{
-                      width: 0,
-                      animation: `dot-progress ${INTERVAL_MS}ms linear forwards`,
-                    }}
-                  />
-                )}
+                {/* Visual dot -- kept small for aesthetics, padded wrapper
+                    provides the 44px touch target around it. */}
+                <span
+                  className={`relative block rounded-full overflow-hidden transition-all duration-300 ${
+                    i === current ? "w-8 h-1.5 bg-white/30" : "w-1.5 h-1.5 bg-white/50"
+                  }`}
+                >
+                  {i === current && (
+                    <span
+                      key={current}
+                      className="absolute inset-y-0 left-0 rounded-full bg-white"
+                      style={{
+                        width: 0,
+                        animation: `dot-progress ${INTERVAL_MS}ms linear forwards`,
+                      }}
+                    />
+                  )}
+                </span>
               </button>
             ))}
           </div>

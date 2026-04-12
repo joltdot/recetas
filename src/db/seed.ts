@@ -1,15 +1,16 @@
 import { createPool } from "@vercel/postgres"
 import { drizzle } from "drizzle-orm/vercel-postgres"
+import { sql } from "drizzle-orm"
 import * as schema from "./schema"
 
 const CATEGORIES = [
-  { name: "Postres", slug: "postres" },
-  { name: "Carnes", slug: "carnes" },
-  { name: "Pastas", slug: "pastas" },
-  { name: "Sopas", slug: "sopas" },
-  { name: "Ensaladas", slug: "ensaladas" },
-  { name: "Bebidas", slug: "bebidas" },
-  { name: "Otros", slug: "otros" },
+  { name: "Postres",   slug: "postres",   color: "pink"   },
+  { name: "Carnes",    slug: "carnes",    color: "red"    },
+  { name: "Pastas",    slug: "pastas",    color: "yellow" },
+  { name: "Sopas",     slug: "sopas",     color: "orange" },
+  { name: "Ensaladas", slug: "ensaladas", color: "green"  },
+  { name: "Bebidas",   slug: "bebidas",   color: "blue"   },
+  { name: "Otros",     slug: "otros",     color: "stone"  },
 ]
 
 async function main() {
@@ -21,7 +22,7 @@ async function main() {
     await db
       .insert(schema.categories)
       .values(cat)
-      .onConflictDoNothing()
+      .onConflictDoUpdate({ target: schema.categories.slug, set: { color: sql`excluded.color` } })
   }
   console.log("Done! Inserted", CATEGORIES.length, "categories.")
   await pool.end()

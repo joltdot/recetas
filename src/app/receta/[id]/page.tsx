@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { db, schema } from "@/db"
 import { eq } from "drizzle-orm"
-import { cn, formatTime, CATEGORY_COLORS } from "@/lib/utils"
+import { cn, formatDate, formatTime, getCategoryStyle } from "@/lib/utils"
 import DeleteButton from "@/components/DeleteButton"
 import RecipeCarousel from "@/components/RecipeCarousel"
 import AudioPlayer from "@/components/AudioPlayer"
@@ -31,6 +31,7 @@ async function getRecipe(id: string): Promise<Recipe | null> {
         id: schema.categories.id,
         name: schema.categories.name,
         slug: schema.categories.slug,
+        color: schema.categories.color,
         createdAt: schema.categories.createdAt,
       },
     })
@@ -46,36 +47,33 @@ export default async function RecipePage({ params }: { params: { id: string } })
   const recipe = await getRecipe(params.id)
   if (!recipe) notFound()
 
-  const categorySlug = recipe.category?.slug
   const categoryName = recipe.category?.name
+  const categoryColor = recipe.category?.color
 
   return (
+    <div>
+      {/* Sticky back button */}
+      <div className="sticky top-4 sm:top-[4.5rem] z-20 mb-4">
+        <BackButton className="inline-flex items-center gap-1.5 text-stone-600 text-sm font-medium bg-white/90 backdrop-blur-sm shadow-sm border border-stone-200 rounded-full px-4 py-2 hover:bg-white hover:shadow transition-shadow min-h-[36px]">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Volver
+        </BackButton>
+      </div>
+
     <div className="space-y-6">
       {/* Header */}
       <div>
-        {/* Header carousel with back button overlaid */}
-        {recipe.images && recipe.images.length > 0 ? (
-          <div className="relative mb-4">
+        {recipe.images && recipe.images.length > 0 && (
+          <div className="mb-4">
             <RecipeCarousel images={recipe.images} />
-            <BackButton className="absolute top-3 left-3 inline-flex items-center gap-1 text-white text-sm bg-black/40 hover:bg-black/60 backdrop-blur-sm rounded-full px-3 py-1.5 transition-colors min-h-[36px]">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-              </svg>
-              Volver
-            </BackButton>
           </div>
-        ) : (
-          <BackButton className="inline-flex items-center gap-1 text-stone-500 text-sm mb-4 hover:text-stone-700 transition-colors min-h-[44px]">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Volver
-          </BackButton>
         )}
 
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {categorySlug && (
-            <span className={cn("badge", CATEGORY_COLORS[categorySlug] ?? "bg-stone-100 text-stone-600")}>
+          {categoryName && (
+            <span className="badge" style={getCategoryStyle(categoryColor)}>
               {categoryName}
             </span>
           )}
@@ -95,6 +93,14 @@ export default async function RecipePage({ params }: { params: { id: string } })
 
         {/* Meta */}
         <div className="flex flex-wrap gap-4 mt-4 text-stone-500 text-sm">
+          {recipe.createdAt && (
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
+              </svg>
+              {formatDate(recipe.createdAt)}
+            </span>
+          )}
           {recipe.prepTime != null && (
             <span className="flex items-center gap-1.5">
               <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
@@ -136,6 +142,8 @@ export default async function RecipePage({ params }: { params: { id: string } })
                 <img
                   src={ing.imageUrl}
                   alt={ing.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                 />
               )}
@@ -167,6 +175,8 @@ export default async function RecipePage({ params }: { params: { id: string } })
                     <img
                       src={step.imageUrl}
                       alt={`Paso ${step.order}`}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full rounded-xl object-cover aspect-video"
                     />
                   )}
@@ -183,6 +193,7 @@ export default async function RecipePage({ params }: { params: { id: string } })
         </Link>
         <DeleteButton recipeId={recipe.id} />
       </div>
+    </div>
     </div>
   )
 }

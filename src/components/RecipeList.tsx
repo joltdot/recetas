@@ -1,4 +1,4 @@
-import Link from "next/link"
+import RippleLink from "./RippleLink"
 import RecipeCard from "./RecipeCard"
 import type { Recipe } from "@/types"
 
@@ -20,9 +20,9 @@ export default function RecipeList({ recipes, activeCategory }: RecipeListProps)
             ? "Prueba seleccionando otra categoría o agrega una receta nueva."
             : "¡Agrega tu primera receta! Puedes escribirla o dictarla por voz."}
         </p>
-        <Link href="/receta/nueva" className="btn-primary">
+        <RippleLink href="/receta/nueva" pageTransition transitionType="slide" rippleColor="bg-white/30" className="btn-primary">
           + Nueva Receta
-        </Link>
+        </RippleLink>
       </div>
     )
   }

@@ -5,6 +5,7 @@ export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   slug: text("slug").unique().notNull(),
+  color: text("color"),
   createdAt: timestamp("created_at").default(sql`now()`),
 })
 

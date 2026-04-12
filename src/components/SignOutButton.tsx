@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { signOut } from "next-auth/react"
 import Image from "next/image"
 
@@ -12,11 +12,21 @@ interface SignOutButtonProps {
 
 export default function SignOutButton({ name, image, compact = false }: SignOutButtonProps) {
   const [open, setOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const clickPos = useRef({ x: 0, y: 0 })
+
+  function close() {
+    setClosing(true)
+  }
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          if (open) { close(); return }
+          clickPos.current = { x: e.clientX, y: e.clientY }
+          setOpen(true)
+        }}
         className="flex items-center gap-2 rounded-full active:opacity-70 transition-opacity min-h-[44px] min-w-[44px] justify-center"
         aria-label="Menú de usuario"
       >
@@ -41,9 +51,17 @@ export default function SignOutButton({ name, image, compact = false }: SignOutB
       {open && (
         <>
           {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={close} />
           {/* Dropdown */}
-          <div className="absolute right-0 top-12 z-50 bg-white rounded-2xl shadow-xl border border-stone-200 py-1 min-w-[160px]">
+          <div
+            ref={(el) => {
+              if (!el) return
+              const rect = el.getBoundingClientRect()
+              el.style.transformOrigin = `${clickPos.current.x - rect.left}px ${clickPos.current.y - rect.top}px`
+            }}
+            onAnimationEnd={() => { if (closing) { setOpen(false); setClosing(false) } }}
+            className={`${closing ? "animate-dropdown-close" : "animate-dropdown"} absolute right-0 top-12 z-50 bg-white rounded-2xl shadow-xl border border-stone-200 py-1 min-w-[160px]`}
+          >
             {name && (
               <div className="px-4 py-2 border-b border-stone-100">
                 <p className="text-xs text-stone-400">Conectado como</p>

@@ -18,14 +18,14 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, slug } = await req.json()
+    const { name, slug, color } = await req.json()
     if (!name || !slug) {
       return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 })
     }
 
     const [category] = await db
       .insert(schema.categories)
-      .values({ name, slug })
+      .values({ name, slug, color: color ?? null })
       .returning()
 
     return NextResponse.json(category, { status: 201 })

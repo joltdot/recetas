@@ -15,6 +15,7 @@ export interface Category {
   id: string
   name: string
   slug: string
+  color?: string | null
   createdAt: Date | null
 }
 

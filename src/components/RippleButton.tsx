@@ -1,18 +1,16 @@
 "use client"
 
+import React from "react"
 import { useRipple } from "@/hooks/useRipple"
 
 interface RippleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   rippleColor?: string
 }
 
-export default function RippleButton({
-  rippleColor = "bg-white/50",
-  className,
-  children,
-  onPointerDown,
-  ...props
-}: RippleButtonProps) {
+const RippleButton = React.forwardRef<HTMLButtonElement, RippleButtonProps>(function RippleButton(
+  { rippleColor = "bg-white/50", className, children, onPointerDown, ...props },
+  forwardedRef
+) {
   const { ripples, addRipple, containerRef } = useRipple()
 
   return (
@@ -24,7 +22,11 @@ export default function RippleButton({
         }
       `}</style>
       <button
-        ref={containerRef as React.RefObject<HTMLButtonElement>}
+        ref={(el) => {
+          ;(containerRef as React.MutableRefObject<HTMLButtonElement | null>).current = el
+          if (typeof forwardedRef === "function") forwardedRef(el)
+          else if (forwardedRef) forwardedRef.current = el
+        }}
         onPointerDown={(e) => { addRipple(e); onPointerDown?.(e) }}
         className={`relative overflow-hidden select-none ${className ?? ""}`}
         {...props}
@@ -48,4 +50,6 @@ export default function RippleButton({
       </button>
     </>
   )
-}
+})
+
+export default RippleButton

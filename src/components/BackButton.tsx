@@ -1,6 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useRipple } from "@/hooks/useRipple"
+import { cn } from "@/lib/utils"
 
 interface BackButtonProps {
   className?: string
@@ -9,6 +11,11 @@ interface BackButtonProps {
 
 export default function BackButton({ className, children }: BackButtonProps) {
   const router = useRouter()
+  const { ripples, addRipple, containerRef } = useRipple()
+
+  function handlePointerDown(e: React.PointerEvent) {
+    addRipple(e)
+  }
 
   function handleClick(e: React.MouseEvent) {
     if (!("startViewTransition" in document)) {
@@ -24,15 +31,43 @@ export default function BackButton({ className, children }: BackButtonProps) {
     const transition = (document as any).startViewTransition(() => router.push("/"))
     transition.finished.finally(() => {
       document.documentElement.classList.remove("vt-backward")
-      // Clear so the next forward transition always gets fresh coordinates from RippleLink
       document.documentElement.style.removeProperty("--ripple-x")
       document.documentElement.style.removeProperty("--ripple-y")
     })
   }
 
   return (
-    <button type="button" onClick={handleClick} className={className}>
-      {children}
-    </button>
+    <>
+      <style>{`
+        @keyframes ripple-expand {
+          from { transform: translate(-50%, -50%) scale(0); opacity: 0.35; }
+          to   { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+      `}</style>
+      <button
+        ref={containerRef as React.RefObject<HTMLButtonElement>}
+        type="button"
+        onPointerDown={handlePointerDown}
+        onClick={handleClick}
+        className={cn("relative overflow-hidden select-none", className)}
+      >
+        {children}
+        {ripples.map((r) => (
+          <span
+            key={r.id}
+            className="absolute rounded-full pointer-events-none bg-amber-400"
+            style={{
+              left: r.x,
+              top: r.y,
+              width: r.size,
+              height: r.size,
+              zIndex: 50,
+              filter: "blur(8px)",
+              animation: "ripple-expand 1000ms ease-out forwards",
+            }}
+          />
+        ))}
+      </button>
+    </>
   )
 }

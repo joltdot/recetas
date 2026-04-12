@@ -67,7 +67,7 @@ export default function ImageUploader({
       return (
         <div className="relative w-10 h-10 rounded-lg overflow-hidden group flex-shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="w-full h-full object-cover" />
+          <img src={value} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
           <button
             type="button"
             onClick={() => onChange(null)}
@@ -112,6 +112,7 @@ export default function ImageUploader({
           ref={inputRef}
           type="file"
           accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]
@@ -130,7 +131,7 @@ export default function ImageUploader({
     return (
       <div className={`relative w-full ${aspectClass} rounded-xl overflow-hidden group`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={value} alt="Foto de la receta" className="w-full h-full object-cover" />
+        <img src={value} alt="Foto de la receta" loading="lazy" decoding="async" className="w-full h-full object-cover" />
         <button
           type="button"
           onClick={() => onChange(null)}
@@ -184,6 +185,7 @@ export default function ImageUploader({
         ref={inputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]
