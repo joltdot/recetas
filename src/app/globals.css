@@ -36,6 +36,7 @@
   z-index: 0;
 }
 
+
 @layer base {
   body {
     @apply bg-stone-50 text-stone-900 font-sans;
