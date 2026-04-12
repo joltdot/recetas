@@ -46,7 +46,7 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
       setErrorMessage(
         e.error === "not-allowed"
           ? "Permiso de micrófono denegado. Actívalo en la configuración del navegador."
-          : "Error en la grabación. Intenta de nuevo."
+          : `Error en la grabación: "${e.error}". Intenta de nuevo.`
       )
       setStatus("error")
     }
