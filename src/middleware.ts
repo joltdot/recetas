@@ -8,7 +8,6 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    // Protect everything except Next.js internals, static assets, PWA files, and the auth pages themselves
     "/((?!_next/static|_next/image|favicon.ico|manifest\\.json|icon-.*\\.png|sw\\.js|workbox-.*|auth/).*)",
   ],
 }
