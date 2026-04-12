@@ -31,6 +31,7 @@ export interface Recipe {
   source: string | null
   audioUrl: string | null
   images: string[] | null
+  userId: string | null
   createdAt: Date | null
   updatedAt: Date | null
   category?: Category | null

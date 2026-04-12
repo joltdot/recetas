@@ -2,8 +2,10 @@ export const dynamic = "force-dynamic"
 
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { db, schema } from "@/db"
-import { eq } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { formatDate, formatTime, getCategoryStyle } from "@/lib/utils"
 import DeleteButton from "@/components/DeleteButton"
 import RecipeCarousel from "@/components/RecipeCarousel"
@@ -11,7 +13,7 @@ import AudioPlayer from "@/components/AudioPlayer"
 import BackButton from "@/components/BackButton"
 import type { Recipe, Ingredient, Step } from "@/types"
 
-async function getRecipe(id: string): Promise<Recipe | null> {
+async function getRecipe(id: string, email: string): Promise<Recipe | null> {
   const rows = await db
     .select({
       id: schema.recipes.id,
@@ -25,6 +27,7 @@ async function getRecipe(id: string): Promise<Recipe | null> {
       source: schema.recipes.source,
       audioUrl: schema.recipes.audioUrl,
       images: schema.recipes.images,
+      userId: schema.recipes.userId,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {
@@ -37,14 +40,16 @@ async function getRecipe(id: string): Promise<Recipe | null> {
     })
     .from(schema.recipes)
     .leftJoin(schema.categories, eq(schema.recipes.categoryId, schema.categories.id))
-    .where(eq(schema.recipes.id, id))
+    .where(and(eq(schema.recipes.id, id), eq(schema.recipes.userId, email)))
     .limit(1)
 
   return rows[0] as Recipe | null
 }
 
 export default async function RecipePage({ params }: { params: { id: string } }) {
-  const recipe = await getRecipe(params.id)
+  const session = await getServerSession(authOptions)
+  const email = session?.user?.email ?? ""
+  const recipe = await getRecipe(params.id, email)
   if (!recipe) notFound()
 
   const categoryName = recipe.category?.name

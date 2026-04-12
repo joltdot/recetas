@@ -21,8 +21,15 @@ export const recipes = pgTable("recipes", {
   servings: integer("servings"),
   source: text("source"),
   audioUrl: text("audio_url"),
+  userId: text("user_id"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
+})
+
+export const allowedEmails = pgTable("allowed_emails", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").unique().notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
 })
 
 export type CategoryRow = typeof categories.$inferSelect

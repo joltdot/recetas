@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { db, schema } from "@/db"
-import { eq, desc } from "drizzle-orm"
+import { eq, desc, and } from "drizzle-orm"
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    const email = session?.user?.email
+    if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const categoria = searchParams.get("categoria")
 
-    const query = db
+    const rows = await db
       .select({
         id: schema.recipes.id,
         title: schema.recipes.title,
@@ -18,6 +24,7 @@ export async function GET(req: NextRequest) {
         prepTime: schema.recipes.prepTime,
         servings: schema.recipes.servings,
         source: schema.recipes.source,
+        userId: schema.recipes.userId,
         createdAt: schema.recipes.createdAt,
         updatedAt: schema.recipes.updatedAt,
         category: {
@@ -30,9 +37,9 @@ export async function GET(req: NextRequest) {
       })
       .from(schema.recipes)
       .leftJoin(schema.categories, eq(schema.recipes.categoryId, schema.categories.id))
+      .where(eq(schema.recipes.userId, email))
       .orderBy(desc(schema.recipes.createdAt))
 
-    const rows = await query
     const filtered = categoria
       ? rows.filter((r) => r.category?.slug === categoria)
       : rows
@@ -46,6 +53,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    const email = session?.user?.email
+    if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+
     const body = await req.json()
     const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, images } = body
 
@@ -55,7 +66,19 @@ export async function POST(req: NextRequest) {
 
     const [recipe] = await db
       .insert(schema.recipes)
-      .values({ title, description, ingredients, steps, categoryId, prepTime, servings, source: source ?? "manual", audioUrl: audioUrl ?? null, images: images ?? [] })
+      .values({
+        title,
+        description,
+        ingredients,
+        steps,
+        categoryId,
+        prepTime,
+        servings,
+        source: source ?? "manual",
+        audioUrl: audioUrl ?? null,
+        images: images ?? [],
+        userId: email,
+      })
       .returning()
 
     return NextResponse.json(recipe, { status: 201 })

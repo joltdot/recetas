@@ -5,13 +5,14 @@ import { db, schema } from "@/db"
 import { asc, desc, eq } from "drizzle-orm"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
+
 import { UtensilsCrossed } from "lucide-react"
 import CategoryFilter from "@/components/CategoryFilter"
 import RecipeGrid from "@/components/RecipeGrid"
 import SignOutButton from "@/components/SignOutButton"
 import type { Recipe, Category } from "@/types"
 
-async function getRecipes(): Promise<Recipe[]> {
+async function getRecipes(email: string): Promise<Recipe[]> {
   const rows = await db
     .select({
       id: schema.recipes.id,
@@ -25,6 +26,7 @@ async function getRecipes(): Promise<Recipe[]> {
       source: schema.recipes.source,
       audioUrl: schema.recipes.audioUrl,
       images: schema.recipes.images,
+      userId: schema.recipes.userId,
       createdAt: schema.recipes.createdAt,
       updatedAt: schema.recipes.updatedAt,
       category: {
@@ -37,6 +39,7 @@ async function getRecipes(): Promise<Recipe[]> {
     })
     .from(schema.recipes)
     .leftJoin(schema.categories, eq(schema.recipes.categoryId, schema.categories.id))
+    .where(eq(schema.recipes.userId, email))
     .orderBy(desc(schema.recipes.createdAt))
 
   return rows as Recipe[]
@@ -47,7 +50,10 @@ async function getCategories(): Promise<Category[]> {
 }
 
 export default async function HomePage() {
-  const [recipes, categories, session] = await Promise.all([getRecipes(), getCategories(), getServerSession(authOptions)])
+  const session = await getServerSession(authOptions)
+  const email = session?.user?.email ?? ""
+  const admin = !!email && !!process.env.ADMIN_EMAIL && email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()
+  const [recipes, categories] = await Promise.all([getRecipes(email), getCategories()])
 
   return (
     <div className="space-y-5">
@@ -60,6 +66,7 @@ export default async function HomePage() {
             name={session.user.name ?? undefined}
             image={session.user.image ?? undefined}
             compact
+            isAdmin={admin}
           />
         )}
       </div>

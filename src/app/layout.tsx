@@ -53,8 +53,13 @@ export const viewport: Viewport = {
   ],
 }
 
+function isAdmin(email?: string | null) {
+  return !!email && !!process.env.ADMIN_EMAIL && email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase()
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions)
+  const admin = isAdmin(session?.user?.email)
 
   return (
     <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
@@ -75,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <SignOutButton
                     name={session.user.name ?? undefined}
                     image={session.user.image ?? undefined}
+                    isAdmin={admin}
                   />
                 )}
               </div>
