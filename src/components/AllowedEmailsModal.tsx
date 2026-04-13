@@ -99,14 +99,14 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
         onClick={closeModal}
       />
 
-      {/* Modal */}
+      {/* Modal — bottom sheet on mobile, centered dialog on desktop */}
       <div
         onAnimationEnd={() => { if (closing) onClose() }}
-        className={`${closing ? "animate-modal-close" : "animate-modal"} fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden`}
+        className={`fixed z-50 bg-white shadow-2xl border border-stone-200 overflow-hidden bottom-0 left-0 right-0 rounded-t-2xl pb-safe sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-sm sm:rounded-2xl sm:pb-0 ${closing ? "animate-modal-close" : "animate-modal"}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
