@@ -13,6 +13,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   const categoryColor = recipe.category?.color
 
   const firstImage = recipe.images?.[0]
+  const hasBadge = !!(categoryName || recipe.source === "audio")
 
   return (
     <RippleLink
@@ -32,7 +33,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         />
       )}
 
-      <div className={firstImage ? "p-4" : ""}>
+      <div className={firstImage ? cn("px-4 pb-4", hasBadge ? "pt-4" : "pt-2") : ""}>
         {(categoryName || recipe.source === "audio") && (
           <div className="flex items-start justify-between gap-2 mb-2">
             {categoryName ? (
