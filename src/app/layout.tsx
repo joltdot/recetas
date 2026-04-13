@@ -10,6 +10,7 @@ import InstallBanner from "@/components/InstallBanner"
 import SignOutButton from "@/components/SignOutButton"
 import NavLink from "@/components/NavLink"
 import OfflineIndicator from "@/components/OfflineIndicator"
+import Heartbeat from "@/components/Heartbeat"
 import "./globals.css"
 
 const inter = Inter({
@@ -66,6 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="antialiased min-h-screen flex flex-col">
         <AuthProvider>
           <OfflineIndicator />
+          <Heartbeat />
           {/* Desktop top nav */}
           <header className="hidden sm:flex sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-stone-200" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
             <div className="max-w-3xl mx-auto w-full px-4 flex items-center justify-between h-14">

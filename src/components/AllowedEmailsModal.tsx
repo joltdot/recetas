@@ -7,12 +7,32 @@ interface EmailEntry {
   email: string
 }
 
+interface PresenceEntry {
+  email: string
+  name: string | null
+  image: string | null
+  lastSeenAt: string
+}
+
 interface AllowedEmailsModalProps {
   onClose: () => void
 }
 
+function timeAgo(date: Date): string {
+  const mins = Math.floor((Date.now() - date.getTime()) / 60_000)
+  if (mins < 1) return "Ahora"
+  if (mins < 60) return `Hace ${mins} min`
+  const h = Math.floor(mins / 60)
+  return `Hace ${h}h`
+}
+
+function isOnline(date: Date) {
+  return Date.now() - date.getTime() < 3 * 60_000
+}
+
 export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps) {
   const [emails, setEmails] = useState<EmailEntry[]>([])
+  const [presence, setPresence] = useState<Map<string, PresenceEntry>>(new Map())
   const [loading, setLoading] = useState(true)
   const [input, setInput] = useState("")
   const [adding, setAdding] = useState(false)
@@ -21,10 +41,18 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetch("/api/allowed-emails")
-      .then((r) => r.json())
-      .then((data) => { setEmails(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch("/api/allowed-emails").then((r) => r.json()),
+      fetch("/api/presence").then((r) => r.ok ? r.json() : []),
+    ]).then(([emailData, presenceData]: [EmailEntry[], PresenceEntry[]]) => {
+      setEmails(emailData)
+      const map = new Map<string, PresenceEntry>()
+      for (const p of presenceData) {
+        map.set(p.email.toLowerCase(), p)
+      }
+      setPresence(map)
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -62,6 +90,11 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
     }
   }
 
+  const onlineCount = emails.filter((e) => {
+    const p = presence.get(e.email.toLowerCase())
+    return p && isOnline(new Date(p.lastSeenAt))
+  }).length
+
   return (
     <>
       {/* Backdrop */}
@@ -77,7 +110,14 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
-          <h2 className="font-serif text-lg font-semibold text-stone-900">Acceso permitido</h2>
+          <div>
+            <h2 className="font-serif text-lg font-semibold text-stone-900">Acceso permitido</h2>
+            {!loading && onlineCount > 0 && (
+              <p className="text-xs text-emerald-600 font-medium mt-0.5">
+                {onlineCount} en línea ahora
+              </p>
+            )}
+          </div>
           <button
             onClick={closeModal}
             className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
@@ -96,20 +136,40 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
           ) : emails.length === 0 ? (
             <p className="text-sm text-stone-400 py-4 text-center">No hay emails guardados</p>
           ) : (
-            emails.map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between gap-2 py-1.5 group">
-                <span className="text-sm text-stone-700 truncate">{entry.email}</span>
-                <button
-                  onClick={() => removeEmail(entry)}
-                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                  aria-label={`Eliminar ${entry.email}`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))
+            emails.map((entry) => {
+              const p = presence.get(entry.email.toLowerCase())
+              const online = p ? isOnline(new Date(p.lastSeenAt)) : false
+              const ago = p ? timeAgo(new Date(p.lastSeenAt)) : null
+
+              return (
+                <div key={entry.id} className="flex items-center justify-between gap-2 py-1.5 group">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {/* Presence dot */}
+                    <span
+                      className={`shrink-0 w-2 h-2 rounded-full ${online ? "bg-emerald-500" : "bg-stone-300"}`}
+                      title={online ? "En línea" : ago ?? "Sin actividad"}
+                    />
+                    <div className="min-w-0">
+                      <span className="text-sm text-stone-700 truncate block">{entry.email}</span>
+                      {ago && (
+                        <span className={`text-xs ${online ? "text-emerald-600" : "text-stone-400"}`}>
+                          {online ? "En línea" : ago}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeEmail(entry)}
+                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                    aria-label={`Eliminar ${entry.email}`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )
+            })
           )}
         </div>
 

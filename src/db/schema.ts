@@ -32,6 +32,13 @@ export const allowedEmails = pgTable("allowed_emails", {
   createdAt: timestamp("created_at").default(sql`now()`),
 })
 
+export const userPresence = pgTable("user_presence", {
+  email: text("email").primaryKey(),
+  name: text("name"),
+  image: text("image"),
+  lastSeenAt: timestamp("last_seen_at").default(sql`now()`).notNull(),
+})
+
 export type CategoryRow = typeof categories.$inferSelect
 export type RecipeRow = typeof recipes.$inferSelect
 export type NewRecipe = typeof recipes.$inferInsert
