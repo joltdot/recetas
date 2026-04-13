@@ -8,7 +8,7 @@ function SignInContent() {
   const error = useSearchParams().get("error")
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">
+    <div className="min-h-screen min-h-dvh flex items-center justify-center bg-stone-50 px-4">
       <div className="card max-w-sm w-full text-center space-y-6 p-8">
         <div>
           <h1 className="font-serif text-3xl font-bold text-stone-900 mb-1">Recetas</h1>

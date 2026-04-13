@@ -35,12 +35,12 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
 
       <div className={firstImage ? cn("px-4 pb-4", hasBadge ? "pt-4" : "pt-2") : ""}>
         {(categoryName || recipe.source === "audio") && (
-          <div className="flex items-start justify-between gap-2 mb-2">
-            {categoryName ? (
+          <div className="flex items-start gap-2 mb-2">
+            {categoryName && (
               <span className="badge text-[11px]" style={getCategoryStyle(categoryColor)}>
                 {categoryName}
               </span>
-            ) : <span />}
+            )}
             {recipe.source === "audio" && (
               <span className="badge text-[11px] bg-violet-100 text-violet-700 ml-auto shrink-0">🎙 IA</span>
             )}

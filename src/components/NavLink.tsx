@@ -20,10 +20,11 @@ export default function NavLink({ href, transitionType, children }: NavLinkProps
       rippleColor="bg-amber-400"
       pageTransition
       transitionType={transitionType}
-      className={`flex-1 flex flex-col items-center justify-center py-3 gap-0.5 min-h-[56px] transition-colors ${
+      className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors ${
         isActive ? "text-amber-600" : "text-stone-400"
       }`}
     >
+      <span className={`w-5 h-0.5 rounded-full mb-0.5 transition-colors ${isActive ? "bg-amber-500" : "bg-transparent"}`} />
       {children}
     </RippleLink>
   )

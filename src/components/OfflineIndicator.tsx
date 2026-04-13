@@ -24,7 +24,7 @@ export default function OfflineIndicator() {
 
   return (
     <div
-      className="fixed top-0 inset-x-0 z-50 bg-stone-800 text-white text-center text-xs font-medium py-1.5"
+      className="fixed top-0 inset-x-0 z-40 bg-stone-800 text-white text-center text-xs font-medium py-1.5"
       style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 6px)" }}
       role="status"
       aria-live="polite"

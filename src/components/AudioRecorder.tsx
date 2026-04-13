@@ -171,7 +171,7 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
           {transcript ? (
             <div className="w-full bg-stone-50 border border-stone-200 rounded-xl p-3">
               <p className="text-xs text-stone-400 mb-1 font-medium uppercase tracking-wide">Transcripción</p>
-              <p className="text-stone-700 text-sm leading-relaxed">{transcript}</p>
+              <p className="text-stone-700 text-sm leading-relaxed max-h-40 overflow-y-auto">{transcript}</p>
             </div>
           ) : (
             <p className="text-stone-400 text-sm">Transcribiendo audio...</p>

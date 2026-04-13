@@ -160,7 +160,7 @@ export default function AllowedEmailsModal({ onClose }: AllowedEmailsModalProps)
                   </div>
                   <button
                     onClick={() => removeEmail(entry)}
-                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-stone-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-40 group-hover:opacity-100"
                     aria-label={`Eliminar ${entry.email}`}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">

@@ -25,6 +25,10 @@ export default function ImageUploader({
 
   async function handleFile(file: File) {
     if (!file.type.startsWith("image/")) return
+    if (file.size > 8 * 1024 * 1024) {
+      setError("La imagen no puede superar 8 MB")
+      return
+    }
     setError(null)
     setUploading(true)
     try {
