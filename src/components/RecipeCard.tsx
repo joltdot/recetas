@@ -33,16 +33,18 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
       )}
 
       <div className={firstImage ? "p-4" : ""}>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          {categoryName && (
-            <span className="badge text-[11px]" style={getCategoryStyle(categoryColor)}>
-              {categoryName}
-            </span>
-          )}
-          {recipe.source === "audio" && (
-            <span className="badge text-[11px] bg-violet-100 text-violet-700 ml-auto shrink-0">🎙 IA</span>
-          )}
-        </div>
+        {(categoryName || recipe.source === "audio") && (
+          <div className="flex items-start justify-between gap-2 mb-2">
+            {categoryName ? (
+              <span className="badge text-[11px]" style={getCategoryStyle(categoryColor)}>
+                {categoryName}
+              </span>
+            ) : <span />}
+            {recipe.source === "audio" && (
+              <span className="badge text-[11px] bg-violet-100 text-violet-700 ml-auto shrink-0">🎙 IA</span>
+            )}
+          </div>
+        )}
 
         <h3 className="font-serif text-lg font-semibold text-stone-900 leading-snug mb-1 group-hover:text-amber-700 transition-colors line-clamp-2">
           {recipe.title}
