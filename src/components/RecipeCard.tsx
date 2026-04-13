@@ -13,7 +13,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   const categoryColor = recipe.category?.color
 
   const firstImage = recipe.images?.[0]
-  const hasBadge = !!(categoryName || recipe.source === "audio")
+  const hasBadge = !!categoryName
 
   return (
     <RippleLink
