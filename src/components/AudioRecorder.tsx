@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import type { StructuredRecipe } from "@/types"
 
 interface AudioRecorderProps {
-  onStructured: (data: StructuredRecipe, audioUrl: string | null) => void
+  onStructured: (data: StructuredRecipe, audioUrl: string | null, transcript: string) => void
 }
 
 type Status = "idle" | "recording" | "processing" | "done" | "error"
@@ -107,7 +107,7 @@ export default function AudioRecorder({ onStructured }: AudioRecorderProps) {
 
       const data: StructuredRecipe = await structureRes.json()
       setStatus("done")
-      onStructured(data, audioUrl)
+      onStructured(data, audioUrl, text)
     } catch (e: unknown) {
       setErrorMessage(e instanceof Error ? e.message : "Error al procesar el audio")
       setStatus("error")

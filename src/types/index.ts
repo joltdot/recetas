@@ -30,6 +30,7 @@ export interface Recipe {
   servings: number | null
   source: string | null
   audioUrl: string | null
+  transcript: string | null
   images: string[] | null
   userId: string | null
   createdAt: Date | null

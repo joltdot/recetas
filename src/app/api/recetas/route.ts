@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!email) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
 
     const body = await req.json()
-    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, images } = body
+    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, transcript, images } = body
 
     if (!title || !ingredients || !steps) {
       return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 })
@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
         servings,
         source: source ?? "manual",
         audioUrl: audioUrl ?? null,
+        transcript: transcript ?? null,
         images: images ?? [],
         userId: email,
       })

@@ -10,6 +10,7 @@ import { formatDate, formatTime, getCategoryStyle } from "@/lib/utils"
 import DeleteButton from "@/components/DeleteButton"
 import RecipeCarousel from "@/components/RecipeCarousel"
 import AudioPlayer from "@/components/AudioPlayer"
+import TranscriptToggle from "@/components/TranscriptToggle"
 import BackButton from "@/components/BackButton"
 import type { Recipe, Ingredient, Step } from "@/types"
 
@@ -26,6 +27,7 @@ async function getRecipe(id: string, email: string): Promise<Recipe | null> {
       servings: schema.recipes.servings,
       source: schema.recipes.source,
       audioUrl: schema.recipes.audioUrl,
+      transcript: schema.recipes.transcript,
       images: schema.recipes.images,
       userId: schema.recipes.userId,
       createdAt: schema.recipes.createdAt,
@@ -87,6 +89,8 @@ export default async function RecipePage({ params }: { params: { id: string } })
           )}
           {recipe.audioUrl && <AudioPlayer src={recipe.audioUrl} />}
         </div>
+
+        {recipe.transcript && <TranscriptToggle transcript={recipe.transcript} />}
 
         <h1 className="font-serif text-3xl font-bold text-stone-900 leading-tight mb-2">
           {recipe.title}

@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (owned === "forbidden") return NextResponse.json({ error: "No autorizado" }, { status: 403 })
 
     const body = await req.json()
-    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, images } = body
+    const { title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl, transcript, images } = body
 
     if (!title || !ingredients || !steps) {
       return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 })
@@ -79,7 +79,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const [updated] = await db
       .update(schema.recipes)
-      .set({ title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl: audioUrl ?? null, images: images ?? [], updatedAt: new Date() })
+      .set({ title, description, ingredients, steps, categoryId, prepTime, servings, source, audioUrl: audioUrl ?? null, transcript: transcript ?? null, images: images ?? [], updatedAt: new Date() })
       .where(and(eq(schema.recipes.id, params.id), eq(schema.recipes.userId, email)))
       .returning()
 

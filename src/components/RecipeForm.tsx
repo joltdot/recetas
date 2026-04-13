@@ -43,6 +43,7 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
 
   const [images, setImages] = useState<string[]>((initialData?.images as string[]) ?? [])
   const [audioUrl, setAudioUrl] = useState<string | null>(initialData?.audioUrl ?? null)
+  const [transcript, setTranscript] = useState<string>(initialData?.transcript ?? "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [audioPrefilled, setAudioPrefilled] = useState(false)
@@ -82,8 +83,9 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
   }, [])
 
 
-  function handleAudioResult(data: StructuredRecipe, url: string | null) {
+  function handleAudioResult(data: StructuredRecipe, url: string | null, text: string) {
     setAudioUrl(url)
+    setTranscript(text)
     if (data.title) setTitle(data.title)
     if (data.description) setDescription(data.description)
     if (data.ingredients?.length) setIngredients(data.ingredients)
@@ -200,6 +202,7 @@ export default function RecipeForm({ categories, initialData }: RecipeFormProps)
         servings: servings ? parseInt(servings) : null,
         source,
         audioUrl: audioUrl ?? null,
+        transcript: transcript || null,
         images,
       }
 
